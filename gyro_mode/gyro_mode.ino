@@ -52,6 +52,8 @@ void loop() {
     BL.write(1000);
     BR.write(1000);
     rx.waitForConnect();
+
+    rx.printSignals(); // COMMENT OUT: DEBUGGING USE ONLY
   }
   else{
     

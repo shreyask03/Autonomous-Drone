@@ -23,9 +23,10 @@ class Receiver{
     int getRollRate(); // microseconds mapped to [-90,90] deg/s
     int getThrottle(); // raw microseconds
     bool isArmed(); // arming procedure
-    // bool isSignalLost(unsigned long timeoutUs = 100000); // failsafe trigger check
+    bool isAngle(); // angle mode check
     bool isConnected(); // checks for Rx connected
     void waitForConnect(); // blocking function waits for Rx to connect
+    void printSignals(); // debug method to ensure proper signals being sent
 
 };
 

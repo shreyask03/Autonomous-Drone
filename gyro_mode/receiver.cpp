@@ -167,6 +167,13 @@ bool Receiver::isArmed() {
   return (armSwitch > 1950);
 }
 
+bool Receiver::isAngle(){
+  noInterrupts();
+  int flightmode = ch[6]; // ch 6 is flight mode switch
+  interrupts();
+  return (flightmode > 1950); // if high signal sent then angle mode should be on
+}
+
 int Receiver::mapChannel(uint8_t channel, int outMin, int outMax) {
   noInterrupts();
   int val = ch[channel];
@@ -183,7 +190,13 @@ void Receiver::waitForConnect(){
     delay(100);
   }
 }
-
-// bool Receiver::isSignalLost(unsigned long timeoutUs){
-//   return (micros() - lastFrameTime > timeoutUs);
-// }
+//prints signals out to check validity for debugging purposes
+void Receiver::printSignals(){
+  Serial.begin(115200);
+  Serial.print("Roll: "); Serial.print(ch[1]);
+  Serial.print(" | "); Serial.print("Pitch: "); Serial.print(ch[2]);
+  Serial.print(" | "); Serial.print("Throttle: "); Serial.print(ch[3]);
+  Serial.print(" | "); Serial.print("Yaw: "); Serial.print(ch[4]);
+  Serial.print(" | "); Serial.print("Arm: "); Serial.print(ch[5]);
+  Serial.print(" | "); Serial.print("Angle: "); Serial.println(ch[6]);
+}

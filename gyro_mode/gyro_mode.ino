@@ -12,10 +12,13 @@ Motor BR(9); // back right
 
 MPU mpu;
 
-PID roll(0.0,0.0,0.0); // initial untuned values P 0.1, I 0, D 0.01 // next D 0.5
-PID pitch(0.0,0.0,0.0); // initial untuned values P 0.1, I 0, D 0.01 // next D 0.5
-PID yaw(0.0,0.0,0.0);
-
+// initialize PID axes
+PID roll(0.5,0.5,0.0001); // try same as pitch values
+PID pitch(0.5,0.5,0.0001); // P=0.75, D = 0.0001 pretty good // P=0.5 slightly better // overall relatively sluggish response, may fix later wih post flight tuning
+PID yaw(0.5,0.5,0.0001);
+// PID roll(0,0,0);
+// PID pitch(0,0,0);
+// PID yaw(0,0,0);
 ISR(PCINT0_vect){
   rx.handleInterrupt();
 }
@@ -56,24 +59,19 @@ void loop() {
     // rx.printSignals(); // COMMENT OUT: DEBUGGING USE ONLY
   }
   else{
-    if(rx.isAngle()){ // ANGLE MODE
-      
-    }
-    else{ // GYRO MODE
       // Read IMU (current orientation)
 
-      mpu.readRawData();
-      float currRollRate = mpu.convertRoll();
-      float currPitchRate = mpu.convertPitch();
-      float currYawRate = mpu.convertYaw();
+      mpu.updateGyro();
+      MPU::Vector3 rates = mpu.getGyro();
+      float currRollRate = rates.x;
+      float currPitchRate = rates.y;
+      float currYawRate = rates.z;
 
       // Read pilot inputs (desired "setpoint")
       int throttle = rx.getThrottle();
-      // int desiredRoll = rx.getRollRate();
-      // int desiredPitch = rx.getPitchRate();
-      // int desiredYaw = rx.getYawRate();
-      int desiredRoll, desiredPitch, desiredYaw;
-      mpu.convertGyroRawToUsable(desiredRoll, desiredPitch, desiredYaw);
+      int desiredRoll = rx.getRollRate();
+      int desiredPitch = rx.getPitchRate();
+      int desiredYaw = rx.getYawRate();
 
       // compute PID correction
       float rollContribution = roll.compute(desiredRoll, currRollRate );
@@ -93,6 +91,5 @@ void loop() {
       FR.write(pulse_FR);
       BL.write(pulse_BL);
       BR.write(pulse_BR);
-    }
   }
 }

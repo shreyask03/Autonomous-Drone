@@ -39,4 +39,9 @@ float MPU::convertRoll(){
   return this->gx / this->GY250_SENSE;
 }
 
+void MPU::convertGyroRawToUsable(&rr, &pr, &yr){
+  rr = this->gx / this->GY250_SENSE;
+  pr = this->gy / this->GY250_SENSE;
+  yr = this->gz / this->GY250_SENSE;
+}
 

@@ -53,40 +53,46 @@ void loop() {
     BR.write(1000);
     rx.waitForConnect();
 
-    rx.printSignals(); // COMMENT OUT: DEBUGGING USE ONLY
+    // rx.printSignals(); // COMMENT OUT: DEBUGGING USE ONLY
   }
   else{
-    
-    // Read IMU (current orientation)
+    if(rx.isAngle()){ // ANGLE MODE
+      
+    }
+    else{ // GYRO MODE
+      // Read IMU (current orientation)
 
-    mpu.readRawData();
-    float currRollRate = mpu.convertRoll();
-    float currPitchRate = mpu.convertPitch();
-    float currYawRate = mpu.convertYaw();
+      mpu.readRawData();
+      float currRollRate = mpu.convertRoll();
+      float currPitchRate = mpu.convertPitch();
+      float currYawRate = mpu.convertYaw();
 
-    // Read pilot inputs (desired "setpoint")
-    int throttle = rx.getThrottle();
-    int desiredRoll = rx.getRollRate();
-    int desiredPitch = rx.getPitchRate();
-    int desiredYaw = rx.getYawRate();
+      // Read pilot inputs (desired "setpoint")
+      int throttle = rx.getThrottle();
+      // int desiredRoll = rx.getRollRate();
+      // int desiredPitch = rx.getPitchRate();
+      // int desiredYaw = rx.getYawRate();
+      int desiredRoll, desiredPitch, desiredYaw;
+      mpu.convertGyroRawToUsable(desiredRoll, desiredPitch, desiredYaw);
 
-    // compute PID correction
-    float rollContribution = roll.compute(desiredRoll, currRollRate );
-    float pitchContribution = pitch.compute(desiredPitch, currPitchRate );
-    float yawContribution = yaw.compute(desiredYaw, currYawRate );
+      // compute PID correction
+      float rollContribution = roll.compute(desiredRoll, currRollRate );
+      float pitchContribution = pitch.compute(desiredPitch, currPitchRate );
+      float yawContribution = yaw.compute(desiredYaw, currYawRate );
 
-    // mix motor channels (i.e. add PID corrections to throttle)
-    int base_throttle = throttle; // copy throttle to issues with overwriting or tearing with value being read in
+      // mix motor channels (i.e. add PID corrections to throttle)
+      int base_throttle = throttle; // copy throttle to issues with overwriting or tearing with value being read in
 
-    int pulse_FL = base_throttle + pitchContribution - rollContribution - yawContribution;
-    int pulse_FR = base_throttle + pitchContribution + rollContribution + yawContribution;
-    int pulse_BL = base_throttle - pitchContribution - rollContribution + yawContribution;
-    int pulse_BR = base_throttle - pitchContribution + rollContribution - yawContribution;
+      int pulse_FL = base_throttle + pitchContribution - rollContribution - yawContribution;
+      int pulse_FR = base_throttle + pitchContribution + rollContribution + yawContribution;
+      int pulse_BL = base_throttle - pitchContribution - rollContribution + yawContribution;
+      int pulse_BR = base_throttle - pitchContribution + rollContribution - yawContribution;
 
-    // write to motors
-    FL.write(pulse_FL);
-    FR.write(pulse_FR);
-    BL.write(pulse_BL);
-    BR.write(pulse_BR);
+      // write to motors
+      FL.write(pulse_FL);
+      FR.write(pulse_FR);
+      BL.write(pulse_BL);
+      BR.write(pulse_BR);
+    }
   }
 }

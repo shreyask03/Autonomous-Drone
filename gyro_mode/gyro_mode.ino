@@ -3,6 +3,7 @@
 #include "mpu.h"
 #include "pid.h"
 
+//initialize sensors and motors
 Receiver rx;
 
 Motor FL(11); // front left
@@ -12,9 +13,25 @@ Motor BR(9); // back right
 
 MPU mpu;
 
-PID roll(0.0,0.0,0.0); // initial untuned values P 0.1, I 0, D 0.01 // next D 0.5
-PID pitch(0.0,0.0,0.0); // initial untuned values P 0.1, I 0, D 0.01 // next D 0.5
-PID yaw(0.0,0.0,0.0);
+// initialize PID axes
+PID roll(0.5,0.5,0.0001); // try same as pitch values
+PID pitch(0.5,0.5,0.0001); // P=0.75, D = 0.0001 pretty good // P=0.5 slightly better // overall relatively sluggish response, may fix later wih post flight tuning
+PID yaw(0.5,0.5,0.0001);
+
+//initialize control loop variables
+int throttle = 0;
+int desiredRoll = 0;
+int desiredPitch = 0;
+int desiredYaw = 0;
+
+float currRollRate = 0.0;
+float currPitchRate = 0.0;
+float currYawRate = 0.0;
+
+float rollContribution = 0.0;
+float pitchContribution = 0.0;
+float yawContribution = 0.0;
+
 
 ISR(PCINT0_vect){
   rx.handleInterrupt();
@@ -22,6 +39,9 @@ ISR(PCINT0_vect){
 
 void setup() {
   // put your setup code here, to run once:
+  // debugging use
+  // Serial.begin(115200);
+
   // initialize receiver
   rx.init();
 
@@ -45,6 +65,7 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
   if(!rx.isArmed()){
     // shut motors off
     FL.write(1000); // 1ms pulse = 0% throttle
@@ -52,41 +73,49 @@ void loop() {
     BL.write(1000);
     BR.write(1000);
     rx.waitForConnect();
-
-    rx.printSignals(); // COMMENT OUT: DEBUGGING USE ONLY
   }
-  else{
-    
-    // Read IMU (current orientation)
-
-    mpu.readRawData();
-    float currRollRate = mpu.convertRoll();
-    float currPitchRate = mpu.convertPitch();
-    float currYawRate = mpu.convertYaw();
-
+  else{ 
     // Read pilot inputs (desired "setpoint")
-    int throttle = rx.getThrottle();
-    int desiredRoll = rx.getRollRate();
-    int desiredPitch = rx.getPitchRate();
-    int desiredYaw = rx.getYawRate();
+    throttle = rx.getThrottle();
+    desiredRoll = rx.getRollRate();
+    desiredPitch = rx.getPitchRate();
+    desiredYaw = rx.getYawRate();
+
+    if(throttle >= 1100){ // if throttle low dont add PID corrections to output to avoid injury when handling
+    // Read IMU (current orientation)
+    mpu.readRawData();
+    currRollRate = mpu.convertRoll();
+    currPitchRate = mpu.convertPitch();
+    currYawRate = mpu.convertYaw();
 
     // compute PID correction
-    float rollContribution = roll.compute(desiredRoll, currRollRate );
-    float pitchContribution = pitch.compute(desiredPitch, currPitchRate );
-    float yawContribution = yaw.compute(desiredYaw, currYawRate );
+    rollContribution = roll.compute(desiredRoll, currRollRate );
+    pitchContribution = pitch.compute(desiredPitch, currPitchRate );
+    yawContribution = yaw.compute(desiredYaw, currYawRate );
+    }
+    else{
+      rollContribution = 0;
+      pitchContribution = 0;
+      yawContribution = 0;
+    }
 
     // mix motor channels (i.e. add PID corrections to throttle)
     int base_throttle = throttle; // copy throttle to issues with overwriting or tearing with value being read in
 
-    int pulse_FL = base_throttle + pitchContribution - rollContribution - yawContribution;
-    int pulse_FR = base_throttle + pitchContribution + rollContribution + yawContribution;
-    int pulse_BL = base_throttle - pitchContribution - rollContribution + yawContribution;
-    int pulse_BR = base_throttle - pitchContribution + rollContribution - yawContribution;
+
+    // Sign convention: pitch forward(front down) is positive, roll right(right down) is positive, yaw right(clockwise viewed from top) is positive
+    int pulse_FL = base_throttle - pitchContribution + rollContribution - yawContribution;
+    int pulse_FR = base_throttle - pitchContribution - rollContribution + yawContribution;
+    int pulse_BL = base_throttle + pitchContribution + rollContribution + yawContribution;
+    int pulse_BR = base_throttle + pitchContribution - rollContribution - yawContribution;
 
     // write to motors
     FL.write(pulse_FL);
     FR.write(pulse_FR);
     BL.write(pulse_BL);
     BR.write(pulse_BR);
+
+    // // debugging test prints
+    // Serial.print("pitchCont - "); Serial.print(pitchContribution);
   }
 }

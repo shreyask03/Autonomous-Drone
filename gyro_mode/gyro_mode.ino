@@ -32,7 +32,6 @@ float rollContribution = 0.0;
 float pitchContribution = 0.0;
 float yawContribution = 0.0;
 
-
 ISR(PCINT0_vect){
   rx.handleInterrupt();
 }
@@ -73,6 +72,7 @@ void loop() {
     BL.write(1000);
     BR.write(1000);
     rx.waitForConnect();
+    
   }
   else{ 
     // Read pilot inputs (desired "setpoint")
@@ -82,26 +82,27 @@ void loop() {
     desiredYaw = rx.getYawRate();
 
     if(throttle >= 1100){ // if throttle low dont add PID corrections to output to avoid injury when handling
-    // Read IMU (current orientation)
-    mpu.readRawData();
-    currRollRate = mpu.convertRoll();
-    currPitchRate = mpu.convertPitch();
-    currYawRate = mpu.convertYaw();
+      // Read IMU (current orientation)
+      mpu.updateGyro();
+      MPU::Vector3 rates = mpu.getGyro();
+      float currRollRate = rates.x;
+      float currPitchRate = rates.y;
+      float currYawRate = rates.z;
 
-    // compute PID correction
-    rollContribution = roll.compute(desiredRoll, currRollRate );
-    pitchContribution = pitch.compute(desiredPitch, currPitchRate );
-    yawContribution = yaw.compute(desiredYaw, currYawRate );
+      // compute PID correction
+      float rollContribution = roll.compute(desiredRoll, currRollRate );
+      float pitchContribution = pitch.compute(desiredPitch, currPitchRate );
+      float yawContribution = yaw.compute(desiredYaw, currYawRate );
     }
     else{
       rollContribution = 0;
       pitchContribution = 0;
       yawContribution = 0;
     }
+    // rx.printSignals(); // COMMENT OUT: DEBUGGING USE ONLY
 
     // mix motor channels (i.e. add PID corrections to throttle)
     int base_throttle = throttle; // copy throttle to issues with overwriting or tearing with value being read in
-
 
     // Sign convention: pitch forward(front down) is positive, roll right(right down) is positive, yaw right(clockwise viewed from top) is positive
     int pulse_FL = base_throttle - pitchContribution + rollContribution - yawContribution;

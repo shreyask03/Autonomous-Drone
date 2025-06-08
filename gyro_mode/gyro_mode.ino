@@ -80,7 +80,6 @@ void loop() {
     desiredRoll = rx.getRollRate();
     desiredPitch = rx.getPitchRate();
     desiredYaw = rx.getYawRate();
-    
     if(throttle >= 1100){ // if throttle low dont add PID corrections to output to avoid injury when handling
       // Read IMU (current orientation)
       mpu.updateGyro();

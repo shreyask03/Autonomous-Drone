@@ -80,19 +80,19 @@ void loop() {
     desiredRoll = rx.getRollRate();
     desiredPitch = rx.getPitchRate();
     desiredYaw = rx.getYawRate();
-
+    
     if(throttle >= 1100){ // if throttle low dont add PID corrections to output to avoid injury when handling
       // Read IMU (current orientation)
       mpu.updateGyro();
       MPU::Vector3 rates = mpu.getGyro();
-      float currRollRate = rates.x;
-      float currPitchRate = rates.y;
-      float currYawRate = rates.z;
+      currRollRate = rates.x;
+      currPitchRate = rates.y;
+      currYawRate = rates.z;
 
       // compute PID correction
-      float rollContribution = roll.compute(desiredRoll, currRollRate );
-      float pitchContribution = pitch.compute(desiredPitch, currPitchRate );
-      float yawContribution = yaw.compute(desiredYaw, currYawRate );
+      rollContribution = roll.compute(desiredRoll, currRollRate );
+      pitchContribution = pitch.compute(desiredPitch, currPitchRate );
+      yawContribution = yaw.compute(desiredYaw, currYawRate );
     }
     else{
       rollContribution = 0;

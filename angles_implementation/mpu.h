@@ -1,4 +1,4 @@
-#ifndef MPU_H
+  #ifndef MPU_H
 #define MPU_H
 #include <Arduino.h>
 #include "Wire.h"
@@ -14,11 +14,17 @@ class MPU{
 
     Vector3 gyro; // contains angular rates for all 3 axes
     Vector3 accel; // contains linear accels for all 3 axes
+    Vector3 gyro_bias;
 
     static constexpr float GY250_SENSE = 131.0f; // at +- 250 deg/s, the sensitivity scale factor is 131 LSB/deg/s -> a reading of 1 deg/s will output as 131 in serial monitor by default
-    static constexpr float ACCEL_SCALE = 8192.0f; // at +-4g, the raw accel values are divided by this sensitivity scale factor
+    static constexpr float ACCEL_SCALE = 16384.0f; // sensitivity scale factor
     static const int MPU_ADDR = 0x68;
     static const int PWR_MGMT1 = 0x6B;
+
+    // important variables used in computeAngles() for gyroscope angle integration
+    unsigned long last_upd = 0;
+    float prev_pitch = 0;
+    float prev_roll = 0;
 
   public:
     void init(); // initialize MPU
@@ -28,6 +34,12 @@ class MPU{
     // getter functions
     Vector3 getGyro() const;
     Vector3 getAccel() const;
+
+    // Angle Mode
+    Vector3 computeAngles(float dt); // calculates and applies complementary filter to accel and gyro data
+    void calibrateGyro(int samples = 500); // corrects for drift
+    void initDMP(); // setup DMP to send angle data over
+    Vector3 getDMPAngles();
 };
 
 #endif

@@ -2,61 +2,38 @@
 
 MPU mpu;
 
-unsigned long last_upd = 0;
-float prev_pitch = 0;
-float prev_roll = 0;
-
+unsigned long prev_loop = 0;
+const unsigned long LOOP_PERIOD = 4000; // microsecond value locks 250 hz loop rate
 void setup() {
   // put your setup code here, to run once:
+  Serial.begin(115200);
   mpu.init();
-
-  Serial.begin(9600);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  mpu.updateGyro();
-  mpu.updateAccel();
+  static unsigned long last_angle_time_upd = micros(); // track to get angle calculation on right timing
+  unsigned long now = micros();
+  if(now - prev_loop >= LOOP_PERIOD){
+    prev_loop += LOOP_PERIOD; // prevents loop drift over time reducing refresh rate losses
 
-  MPU::Vector3 gyro = mpu.getGyro();
-  MPU::Vector3 accel = mpu.getAccel();
-
-  float gx = gyro.x;
-  float gy = gyro.y;
-
-  float ax = accel.x;
-  float ay = accel.y;
-  float az = accel.z;
-
-  // accel angle estimate
-  float accel_pitch = atan2(ax,sqrt(ay*ay + az*az)) * 180.0/PI;
-  float accel_roll = atan2(ay,sqrt(ax*ax + az*az)) * 180.0/PI;
-
-  // gyro angle estimate
-  unsigned long now = millis();
-  float dt = (now - last_upd)/1000.0f;
-  last_upd = now;
-  float dpitch = gy*dt;
-  float gyro_pitch = prev_pitch + dpitch;
-  prev_pitch = gyro_pitch;
-
-  float droll = gx*dt;
-  float gyro_roll = prev_roll + droll;
-  prev_roll = gyro_roll;
-
-  // complementary filter
-  float alpha = 0.98; // weighting factor
-
-  float filtered_pitch = alpha*gyro_pitch + (1 - alpha)*accel_pitch;
-  float filtered_roll = alpha*gyro_roll + (1 - alpha)*accel_roll;
+    float dt = (now - last_angle_time_upd)/ 1e6;
+    last_angle_time_upd = now;
+    MPU::Vector3 angles = mpu.computeAngles(dt);
+  float x = angles.x;
+  float y = angles.y;
+  // float z = angles.z;
 
   //COMMENT OUT: DEBUG USE ONLY
   // Serial.print("Accel Pitch: "); Serial.print(accel_pitch); Serial.print(" | ");
   // Serial.print("Accel Roll: "); Serial.print(accel_roll); Serial.print(" | ");
   // Serial.print("Gyro Pitch: "); Serial.print(gyro_pitch); Serial.print(" | ");
   // Serial.print("Gyro Roll: "); Serial.println(gyro_roll);
-  Serial.print("Filtered Pitch: ");Serial.print(filtered_pitch); Serial.print(" | ");
-  Serial.print("Filtered Roll: ");Serial.println(filtered_roll);
+  Serial.print("X ");Serial.print(x); Serial.print(" | ");
+  Serial.print("Y ");Serial.print(y); Serial.println(" | ");
+  // Serial.print("Z ");Serial.println(z);
+
+  }
 
 
 }

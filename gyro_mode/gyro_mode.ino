@@ -19,18 +19,25 @@ PID pitch(0.5,0.5,0.0001); // P=0.75, D = 0.0001 pretty good // P=0.5 slightly b
 PID yaw(0.5,0.5,0.0001);
 
 //initialize control loop variables
-int throttle = 0;
-int desiredRoll = 0;
-int desiredPitch = 0;
-int desiredYaw = 0;
+int throttle;
+int desiredRoll;
+int desiredPitch;
+int desiredYaw;
 
-float currRollRate = 0.0;
-float currPitchRate = 0.0;
-float currYawRate = 0.0;
+float currRollRate;
+float currPitchRate;
+float currYawRate;
 
-float rollContribution = 0.0;
-float pitchContribution = 0.0;
-float yawContribution = 0.0;
+float rollContribution;
+float pitchContribution;
+float yawContribution;
+
+// Global variables for loop timing purposes
+unsigned long prev_acro_loop = 0;
+unsigned long prev_angle_loop = 0;
+const unsigned long ACRO_PERIOD = 4000; // microsecond value locks 250 hz loop rate (acro mode)
+const unsigned long ANGLE_PERIOD = 10000; // microsecond value locks 100 hz loop rate (angle mode)
+
 
 ISR(PCINT0_vect){
   rx.handleInterrupt();
@@ -53,18 +60,19 @@ void setup() {
   BL.init();
   BR.init();
 
-  // initialize gyro
+  // initialize gyro and dmp
   mpu.init();
+  mpu.setupForDMP();
 
   // reset PID values
   roll.reset();
   pitch.reset();
   yaw.reset();
+
+  
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
   if(!rx.isArmed()){
     // shut motors off
     FL.write(1000); // 1ms pulse = 0% throttle
@@ -74,48 +82,76 @@ void loop() {
     rx.waitForConnect();
     
   }
-  else{ 
-    // Read pilot inputs (desired "setpoint")
-    throttle = rx.getThrottle();
-    desiredRoll = rx.getRollRate();
-    desiredPitch = rx.getPitchRate();
-    desiredYaw = rx.getYawRate();
-    if(throttle >= 1100){ // if throttle low dont add PID corrections to output to avoid injury when handling
-      // Read IMU (current orientation)
-      mpu.updateGyro();
-      MPU::Vector3 rates = mpu.getGyro();
-      currRollRate = rates.x;
-      currPitchRate = rates.y;
-      currYawRate = rates.z;
+  else{
+    unsigned long now = micros();
+    if(rx.isAngle() && (now - prev_angle_loop >= ANGLE_PERIOD)){
+      prev_angle_loop += ANGLE_PERIOD;
+      throttle = rx.getThrottle();
+      if(throttle >= 1100){
+        // mix motor channels (i.e. add PID corrections to throttle)
+        int base_throttle = throttle; // copy throttle to issues with overwriting or tearing with value being read in
 
-      // compute PID correction
-      rollContribution = roll.compute(desiredRoll, currRollRate );
-      pitchContribution = pitch.compute(desiredPitch, currPitchRate );
-      yawContribution = yaw.compute(desiredYaw, currYawRate );
+        // Sign convention: pitch forward(front down) is positive, roll right(right down) is positive, yaw right(clockwise viewed from top) is positive
+        int pulse_FL = base_throttle - pitchContribution + rollContribution - yawContribution;
+        int pulse_FR = base_throttle - pitchContribution - rollContribution + yawContribution;
+        int pulse_BL = base_throttle + pitchContribution + rollContribution + yawContribution;
+        int pulse_BR = base_throttle + pitchContribution - rollContribution - yawContribution;
+
+        // write to motors
+        FL.write(pulse_FL);
+        FR.write(pulse_FR);
+        BL.write(pulse_BL);
+        BR.write(pulse_BR);
+      }
+      else{
+        rollContribution = 0;
+        pitchContribution = 0;
+        yawContribution = 0;
+      }
     }
-    else{
-      rollContribution = 0;
-      pitchContribution = 0;
-      yawContribution = 0;
+    else if(!rx.isAngle() && (now - prev_acro_loop >= ACRO_PERIOD)){
+      prev_acro_loop += ACRO_PERIOD;
+      // Read pilot inputs (desired "setpoint") mapped to rates
+      throttle = rx.getThrottle();
+      desiredRoll = rx.getRollRate();
+      desiredPitch = rx.getPitchRate();
+      desiredYaw = rx.getYawRate();
+
+      if(throttle >= 1100){ // if throttle low dont add PID corrections to output to avoid injury when handling
+        // Read IMU (current orientation)
+        mpu.updateGyro();
+        MPU::Vector3 rates = mpu.getGyro();
+        currRollRate = rates.x;
+        currPitchRate = rates.y;
+        currYawRate = rates.z;
+
+        // compute PID correction
+        rollContribution = roll.compute(desiredRoll, currRollRate );
+        pitchContribution = pitch.compute(desiredPitch, currPitchRate );
+        yawContribution = yaw.compute(desiredYaw, currYawRate );
+      }
+      else{
+        rollContribution = 0;
+        pitchContribution = 0;
+        yawContribution = 0;
+      }
+      // rx.printSignals(); // COMMENT OUT: DEBUGGING USE ONLY
+
+      // mix motor channels (i.e. add PID corrections to throttle)
+      int base_throttle = throttle; // copy throttle to issues with overwriting or tearing with value being read in
+
+      // Sign convention: pitch forward(front down) is positive, roll right(right down) is positive, yaw right(clockwise viewed from top) is positive
+      int pulse_FL = base_throttle - pitchContribution + rollContribution - yawContribution;
+      int pulse_FR = base_throttle - pitchContribution - rollContribution + yawContribution;
+      int pulse_BL = base_throttle + pitchContribution + rollContribution + yawContribution;
+      int pulse_BR = base_throttle + pitchContribution - rollContribution - yawContribution;
+
+      // write to motors
+      FL.write(pulse_FL);
+      FR.write(pulse_FR);
+      BL.write(pulse_BL);
+      BR.write(pulse_BR);
+
     }
-    // rx.printSignals(); // COMMENT OUT: DEBUGGING USE ONLY
-
-    // mix motor channels (i.e. add PID corrections to throttle)
-    int base_throttle = throttle; // copy throttle to issues with overwriting or tearing with value being read in
-
-    // Sign convention: pitch forward(front down) is positive, roll right(right down) is positive, yaw right(clockwise viewed from top) is positive
-    int pulse_FL = base_throttle - pitchContribution + rollContribution - yawContribution;
-    int pulse_FR = base_throttle - pitchContribution - rollContribution + yawContribution;
-    int pulse_BL = base_throttle + pitchContribution + rollContribution + yawContribution;
-    int pulse_BR = base_throttle + pitchContribution - rollContribution - yawContribution;
-
-    // write to motors
-    FL.write(pulse_FL);
-    FR.write(pulse_FR);
-    BL.write(pulse_BL);
-    BR.write(pulse_BR);
-
-    // // debugging test prints
-    // Serial.print("pitchCont - "); Serial.print(pitchContribution);
   }
 }

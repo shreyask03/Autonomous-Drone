@@ -2,11 +2,14 @@
 
 MPU mpu;
 
+// Global variables for loop timing purposes
 unsigned long prev_acro_loop = 0;
 unsigned long prev_angle_loop = 0;
 const unsigned long ACRO_PERIOD = 4000; // microsecond value locks 250 hz loop rate (acro mode)
 const unsigned long ANGLE_PERIOD = 10000; // microsecond value locks 100 hz loop rate (angle mode)
-bool angleMode = false; // for testing
+
+// TEMPORARY: Testing angle calculation functionality | Delete and adjust dependent code when merged with main
+bool angleMode = false;
 
 void setup() {
   // put your setup code here, to run once:

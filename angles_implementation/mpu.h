@@ -1,7 +1,12 @@
-  #ifndef MPU_H
+
+
+#ifndef MPU_H
 #define MPU_H
 #include <Arduino.h>
 #include "Wire.h"
+#include "MPU6050_6Axis_MotionApps20.h"
+#include "I2CDev.h"
+
 
 class MPU{
   public:
@@ -11,6 +16,8 @@ class MPU{
       float z = 0.0; 
     };
   private:
+
+    MPU6050 mpu; // for use with DMP
 
     Vector3 gyro; // contains angular rates for all 3 axes
     Vector3 accel; // contains linear accels for all 3 axes
@@ -36,10 +43,11 @@ class MPU{
     Vector3 getAccel() const;
 
     // Angle Mode
+    void setupForDMP();
     Vector3 computeAngles(float dt); // calculates and applies complementary filter to accel and gyro data
     void calibrateGyro(int samples = 500); // corrects for drift
-    void initDMP(); // setup DMP to send angle data over
     Vector3 getDMPAngles();
+    
 };
 
 #endif

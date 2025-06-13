@@ -86,7 +86,10 @@ void loop() {
     unsigned long now = micros();
     if(rx.isAngle() && (now - prev_angle_loop >= ANGLE_PERIOD)){
       prev_angle_loop += ANGLE_PERIOD;
+
       throttle = rx.getThrottle();
+      // desiredRoll =
+
       if(throttle >= 1100){
         // mix motor channels (i.e. add PID corrections to throttle)
         int base_throttle = throttle; // copy throttle to issues with overwriting or tearing with value being read in
@@ -96,6 +99,7 @@ void loop() {
         int pulse_FR = base_throttle - pitchContribution - rollContribution + yawContribution;
         int pulse_BL = base_throttle + pitchContribution + rollContribution + yawContribution;
         int pulse_BR = base_throttle + pitchContribution - rollContribution - yawContribution;
+
 
         // write to motors
         FL.write(pulse_FL);
@@ -113,9 +117,9 @@ void loop() {
       prev_acro_loop += ACRO_PERIOD;
       // Read pilot inputs (desired "setpoint") mapped to rates
       throttle = rx.getThrottle();
-      desiredRoll = rx.getRollRate();
-      desiredPitch = rx.getPitchRate();
-      desiredYaw = rx.getYawRate();
+      desiredRoll = rx.getRate(1,90);
+      desiredPitch = rx.getRate(1,90);
+      desiredYaw = rx.getRate(1,90);
 
       if(throttle >= 1100){ // if throttle low dont add PID corrections to output to avoid injury when handling
         // Read IMU (current orientation)

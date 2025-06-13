@@ -1,5 +1,6 @@
 #include "receiver.h"
 
+// initializes rx to begin sending data
 void Receiver::init(){
   // setup pin change interrupt
   pinMode(8, INPUT);
@@ -11,32 +12,8 @@ void Receiver::init(){
   digitalWrite(LED_BUILTIN, LOW);
 }
 
-
+// ISR handler, measures pulses sent from rx to get ch data
 void Receiver::handleInterrupt() {
-  // ISR handler
-  // if (PINB & B00000001) {
-  //   t[pulse] = micros();
-
-  //   if (pulse > 0 && pulse < NUM_CHANNELS) {
-  //     uint16_t pulseWidth = t[pulse] - t[pulse - 1];
-
-  //     // Detect sync pulse
-  //     if (pulseWidth > 3000) {
-  //       t[0] = t[pulse];
-  //       pulse = 1;
-  //       return;
-  //     }
-
-  //     // Clamp valid signal
-  //     if (pulseWidth < 1000) pulseWidth = 1000;
-  //     else if (pulseWidth > 2000) pulseWidth = 2000;
-
-  //     ch[pulse] = pulseWidth;
-  //   }
-
-  //   pulse++;
-  //   if (pulse >= NUM_CHANNELS + 1) pulse = 1;
-  // }
   if (PINB & B00000001){
     t[pulse] = micros();
     switch(pulse){
@@ -136,22 +113,6 @@ void Receiver::handleInterrupt() {
   }
 }
 
-
-int Receiver::getYawRate(){
-  // microseconds mapped to [-90,90] deg/s
-  return mapChannel(4,-90,90);
-}
-
-int Receiver::getPitchRate(){
-  // microseconds mapped to [-90,90] deg/s
-   return mapChannel(2,-90,90);
-}
-
-int Receiver::getRollRate(){
-  // microseconds mapped to [-90,90] deg/s
-   return mapChannel(1,-90,90);
-}
-
 int Receiver::getThrottle(){
   // raw microsecond value
   noInterrupts(); // pause isr updating to prevent value tearing mid assigning
@@ -159,6 +120,22 @@ int Receiver::getThrottle(){
   interrupts(); // resume interrupts
   return val;
 }
+
+
+int Receiver::getRate(uint8_t channel, int limit){
+  noInterrupts();
+  int val = ch[channel];
+  interrupts();
+  return map(val,MINPULSEUS,MAXPULSEUS,-limit,limit);
+}
+// map channel data from raw microseconds to [-limit,limit] deg/s
+int Receiver::getAngle(uint8_t channel, int limit){
+  noInterrupts();
+  int val = ch[channel];
+  interrupts();
+  return map(val,MINPULSEUS,MAXPULSEUS,-limit,limit);
+}
+// map channel data from raw microseconds to [-limit,limit] deg
 
 bool Receiver::isArmed() {
   noInterrupts();
@@ -174,29 +151,26 @@ bool Receiver::isAngle(){
   return (flightmode > 1950); // if high signal sent then angle mode should be on
 }
 
-int Receiver::mapChannel(uint8_t channel, int outMin, int outMax) {
-  noInterrupts();
-  int val = ch[channel];
-  interrupts();
-  return map(val, 1000, 2000, outMin, outMax);
-}
+// checks for valid throttle signal from rx
 bool Receiver::isConnected(){
   int t = this->getThrottle();
   return (t >= 900 && t <= 2100);
 }
+// blocking function waits for Rx to connect
 void Receiver::waitForConnect(){
   while(!isConnected()){
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); // blink LED for status update
     delay(100);
   }
 }
-//prints signals out to check validity for debugging purposes
-void Receiver::printSignals(){
-  Serial.begin(115200);
-  Serial.print("Roll: "); Serial.print(ch[1]);
-  Serial.print(" | "); Serial.print("Pitch: "); Serial.print(ch[2]);
-  Serial.print(" | "); Serial.print("Throttle: "); Serial.print(ch[3]);
-  Serial.print(" | "); Serial.print("Yaw: "); Serial.print(ch[4]);
-  Serial.print(" | "); Serial.print("Arm: "); Serial.print(ch[5]);
-  Serial.print(" | "); Serial.print("Angle: "); Serial.println(ch[6]);
-}
+
+// COMMENT OUT: DEBUG TOOL ONLY | Visualizes received signals
+// void Receiver::printSignals(){
+//   Serial.begin(115200);
+//   Serial.print("Roll: "); Serial.print(ch[1]);
+//   Serial.print(" | "); Serial.print("Pitch: "); Serial.print(ch[2]);
+//   Serial.print(" | "); Serial.print("Throttle: "); Serial.print(ch[3]);
+//   Serial.print(" | "); Serial.print("Yaw: "); Serial.print(ch[4]);
+//   Serial.print(" | "); Serial.print("Arm: "); Serial.print(ch[5]);
+//   Serial.print(" | "); Serial.print("Angle: "); Serial.println(ch[6]);
+// }

@@ -6,7 +6,7 @@ unsigned long prev_acro_loop = 0;
 unsigned long prev_angle_loop = 0;
 const unsigned long ACRO_PERIOD = 4000; // microsecond value locks 250 hz loop rate (acro mode)
 const unsigned long ANGLE_PERIOD = 10000; // microsecond value locks 100 hz loop rate (angle mode)
-bool angleMode = false;
+bool angleMode = false; // for testing
 
 void setup() {
   // put your setup code here, to run once:
@@ -22,6 +22,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   unsigned long now = micros();
+  /* -------------------------- ANGLE MODE -------------------------- */
   if(angleMode && (now - prev_angle_loop >= ANGLE_PERIOD)){
     prev_angle_loop += ANGLE_PERIOD;// prevents loop drift over time reducing refresh rate losses
 
@@ -39,6 +40,8 @@ void loop() {
 
 
   }
+
+  /* -------------------------- ACRO MODE ------------------------- */
   else if(!angleMode && (now - prev_acro_loop >= ACRO_PERIOD)){
     prev_acro_loop += ACRO_PERIOD; // prevents loop drift over time reducing refresh rate losses
     mpu.updateGyro();

@@ -173,4 +173,5 @@ void Receiver::waitForConnect(){
 //   Serial.print(" | "); Serial.print("Yaw: "); Serial.print(ch[4]);
 //   Serial.print(" | "); Serial.print("Arm: "); Serial.print(ch[5]);
 //   Serial.print(" | "); Serial.print("Angle: "); Serial.println(ch[6]);
+//   Serial.print(" | "); Serial.print("Tune: "); Serial.println(ch[6]);
 // }

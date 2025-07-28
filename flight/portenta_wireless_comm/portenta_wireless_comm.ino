@@ -2,10 +2,10 @@
 #include "statusLED.h"
 
 
-const char* ssid = "Ben10";
-const char* password = "kl7d8339";
+const char* ssid = "wifi_name";
+const char* password = "wifi_pass";
 
-const char* serverIP = "192.168.1.62";
+const char* serverIP = "your_local_ip";
 const uint16_t serverPort = 8000;
 
 WiFiClient client;

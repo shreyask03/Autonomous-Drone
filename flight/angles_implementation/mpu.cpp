@@ -1,33 +1,141 @@
+// #include "mpu.h"
+
+// void MPU::init(){
+//   // initialize MPU
+//   Wire.begin();
+//   Wire.beginTransmission(this->MPU_ADDR); // begin writing to MPU
+//   Wire.write(PWR_MGMT1); // access register
+//   Wire.write(0); // wake MPU
+//   Wire.endTransmission(true);
+
+//   // /* RUN FOR THE FIRST TIME ONCE THEN COMMENT OUT */
+//   // // configure gyro
+//   // Wire.beginTransmission(this->MPU_ADDR);
+//   // Wire.write(0x1B);                   // Talk to the GYRO_CONFIG register (1B hex)
+//   // Wire.write(0x00);                   // set register at 0x00 (+- 250 deg/s)
+//   // Wire.endTransmission(true);
+//   // delay(20);
+
+//   // // configure accel
+//   // Wire.beginTransmission(this->MPU_ADDR);
+//   // Wire.write(0x1C);                  //Talk to the ACCEL_CONFIG register (1C hex)
+//   // Wire.write(0x08);                  //set register at 0x08 (+- 4g)
+//   // Wire.endTransmission(true);
+
+// }
+
+// void MPU::updateGyro(){
+//   Wire.beginTransmission(this->MPU_ADDR); // begin writing to MPU
+//   Wire.write(0x43); // starting address GYRO_X high byte register
+//   Wire.endTransmission(false); // restart transmission for reading
+
+//   Wire.requestFrom(this->MPU_ADDR,6); // get 16 bytes for the 3 axes in gyro data sent as two 8 byte packets each
+//   int16_t rawGx = (Wire.read() << 8) | Wire.read(); // gyro x high byte logic OR with low byte to combine into 1 raw data value
+//   int16_t rawGy = (Wire.read() << 8) | Wire.read(); // gyro y ""
+//   int16_t rawGz = (Wire.read() << 8) | Wire.read(); // gyro z ""
+
+
+//   gyro.x = rawGx / this->GY250_SENSE; // divide by scale factor to get to deg/s, store in vector
+//   gyro.y = rawGy / this->GY250_SENSE;
+//   gyro.z = rawGz / this->GY250_SENSE;
+
+//   // apply filtering to smooth gyro noise
+//   gyro.x = alpha*gyro.x + (1-alpha)*new_gx;
+//   new_gx = gyro.x;
+//   gyro.y = alpha*gyro.y + (1-alpha)*new_gy;
+//   new_gy = gyro.y;
+//   gyro.z = alpha*gyro.z + (1-alpha)*new_gz;
+//   new_gz = gyro.z;
+
+//   // update vector with filtered values
+//   gyro.x = new_gx;
+//   gyro.y = new_gy;
+//   gyro.z = new_gz;
+
+// }
+
+// MPU::Vector3 MPU::getGyro() const{ // getter function
+//   return gyro;
+// }
+
+// void MPU::updateAccel(){
+//   Wire.beginTransmission(this->MPU_ADDR); // begin writing to MPU
+//   Wire.write(0x3B); // starting address ACCEL_X_H high byte register
+//   Wire.endTransmission(false); // restart transmission for reading
+
+//   Wire.requestFrom(this->MPU_ADDR,6); // get 16 bytes for 3 axes in accel data sent as two 8 byte packets each
+//   int16_t rawAx = (Wire.read() << 8) | Wire.read(); // accel x high byte logic OR with low byte to combine into 1 16 bit raw data value
+//   int16_t rawAy = (Wire.read() << 8) | Wire.read(); // accel y 
+//   int16_t rawAz = (Wire.read() << 8) | Wire.read(); // accel z
+
+
+//   // convert raw data to proper units
+//   accel.x = rawAx / this->ACCEL4G_SENSE;
+//   accel.y = rawAy / this->ACCEL4G_SENSE;
+//   accel.z = rawAz / this->ACCEL4G_SENSE;
+
+//   // apply filtering to smooth accel noise
+//   accel.x = alpha*accel.x + (1-alpha)*new_ax;
+//   new_ax = accel.x;
+//   accel.y = alpha*accel.y + (1-alpha)*new_ay;
+//   new_ay = accel.y;
+//   accel.z = alpha*accel.z + (1-alpha)*new_az;
+//   new_az = accel.z;
+
+//   // update vector with filtered values
+//   accel.x = new_ax;
+//   accel.y = new_ay;
+//   accel.z = new_az;
+// }
+
+// MPU::Vector3 MPU::computeAngles(){
+//   float startTime = micros();
+//   float dt = (startTime - lastTime)/1000000.0f;
+
+//   // safety clamping dt to avoid weird spikes
+//   if(dt < 0.001f) dt = 0.001f;
+//   if(dt > 0.02f) dt = 0.02f;
+  
+//   // compute accel angle
+//   float accel_roll_angle = atan2(accel.y, sqrt(accel.x*accel.x + accel.z*accel.z)) *57.2957; // deg
+//   float accel_pitch_angle = atan2(-1*accel.x, sqrt(accel.y*accel.y + accel.z*accel.z)) * 57.2957; // deg 
+
+//   // compute gyro angle
+//   // initial angle should not be hard set to 0 (in case drone starts tilted), so setting to current accel initially will be good enough
+//   if(firstRun){
+//     prev_filtered_roll = accel_roll_angle;
+//     prev_filtered_pitch = accel_pitch_angle;
+//     firstRun = false;
+//   }
+//   float gyro_roll_angle = prev_filtered_roll + gyro.x*dt;
+//   float gyro_pitch_angle = prev_filtered_pitch + gyro.y*dt;
+
+//   // combine through complimentary filter
+//   float filtered_roll = alpha*gyro_roll_angle + (1-alpha)*accel_roll_angle;
+//   float filtered_pitch = alpha*gyro_pitch_angle + (1-alpha)*accel_pitch_angle;
+
+//   // update prev angles
+//   prev_filtered_roll = filtered_roll;
+//   prev_filtered_pitch = filtered_pitch;
+
+//   // Adjust for static mounting bias (degrees)
+//   const float pitchOffset = -9.3f; // measured bias (sign depends on direction)
+//   const float rollOffset = 0.1f;  // adjust if needed
+
+//   // Apply correction
+//   filtered_pitch -= pitchOffset;
+//   filtered_roll  -= rollOffset;
+
+//   // add to angle vector
+//   angles.x = filtered_roll;
+//   angles.y = filtered_pitch;
+  
+//   lastTime = startTime;
+  
+//   return angles;
+// }
+
 #include "mpu.h"
-
-
-#define OUTPUT_READABLE_YAWPITCHROLL
-
-#define INTERRUPT_PIN 2
-
-// MPU control/status vars
-bool dmpReady = false;  // set true if DMP init was successful
-uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
-uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
-uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
-uint16_t fifoCount;     // count of all bytes currently in FIFO
-uint8_t fifoBuffer[64]; // FIFO storage buffer
-
-
-// orientation/motion vars
-Quaternion q;           // [w, x, y, z]         quaternion container
-VectorFloat gravity;    // [x, y, z]            gravity vector
-float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
-
-
-// interrupt detection routin
-volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin has gone high
-void dmpDataReady() {
-    mpuInterrupt = true;
-}
-
-
-
 
 void MPU::init(){
   // initialize MPU
@@ -36,6 +144,21 @@ void MPU::init(){
   Wire.write(PWR_MGMT1); // access register
   Wire.write(0); // wake MPU
   Wire.endTransmission(true);
+
+  // /* RUN FOR THE FIRST TIME ONCE THEN COMMENT OUT */
+  // // configure gyro
+  // Wire.beginTransmission(this->MPU_ADDR);
+  // Wire.write(0x1B);                   // Talk to the GYRO_CONFIG register (1B hex)
+  // Wire.write(0x00);                   // set register at 0x00 (+- 250 deg/s)
+  // Wire.endTransmission(true);
+  // delay(20);
+
+  // // configure accel
+  // Wire.beginTransmission(this->MPU_ADDR);
+  // Wire.write(0x1C);                  //Talk to the ACCEL_CONFIG register (1C hex)
+  // Wire.write(0x08);                  //set register at 0x08 (+- 4g)
+  // Wire.endTransmission(true);
+
 }
 
 void MPU::updateGyro(){
@@ -43,7 +166,7 @@ void MPU::updateGyro(){
   Wire.write(0x43); // starting address GYRO_X high byte register
   Wire.endTransmission(false); // restart transmission for reading
 
-  Wire.requestFrom(this->MPU_ADDR,6); // get 16 bytes for the 3 axes in gyro data sent as 2 8 byte packets each
+  Wire.requestFrom(this->MPU_ADDR,6); // get 16 bytes for the 3 axes in gyro data sent as two 8 byte packets each
   int16_t rawGx = (Wire.read() << 8) | Wire.read(); // gyro x high byte logic OR with low byte to combine into 1 raw data value
   int16_t rawGy = (Wire.read() << 8) | Wire.read(); // gyro y ""
   int16_t rawGz = (Wire.read() << 8) | Wire.read(); // gyro z ""
@@ -52,63 +175,157 @@ void MPU::updateGyro(){
   gyro.x = rawGx / this->GY250_SENSE; // divide by scale factor to get to deg/s, store in vector
   gyro.y = rawGy / this->GY250_SENSE;
   gyro.z = rawGz / this->GY250_SENSE;
+
+  // apply filtering to smooth gyro noise
+  new_gx = alpha*gyro.x + (1-alpha)*new_gx;
+  new_gy = alpha*gyro.y + (1-alpha)*new_gy;
+  new_gz = alpha*gyro.z + (1-alpha)*new_gz;
+
+  // update vector with filtered values, account for calibrated offsets
+  gyro.x = new_gx - 0.31;
+  gyro.y = new_gy - 0.32;
+  gyro.z = new_gz - 1.05;
+
 }
 
-MPU::Vector3 MPU::getGyro() const{ // getter function
+MPU::Vector3 MPU::getGyro() { // getter function
+
+  // gyro.x = gyro.x - 0.66;
+  // gyro.y = gyro.y - 0.30;
+  // gyro.z = gyro.z - 1.06;
   return gyro;
 }
 
+MPU::Vector3 MPU::getAccel(){
 
-void MPU::setupForDMP(){
-  mpu.initialize();
-  pinMode(INTERRUPT_PIN,INPUT);
-
-  devStatus = mpu.dmpInitialize();
-
-  // supply your own gyro offsets here, scaled for min sensitivity
-  mpu.setXGyroOffset(-16);
-  mpu.setYGyroOffset(-12);
-  mpu.setZGyroOffset(-39);
-  mpu.setZAccelOffset(1911); // 1688 factory default for my test chip
-
-   // make sure it worked (returns 0 if so)
-    if (devStatus == 0) {
-        // Calibration Time: generate offsets and calibrate our MPU6050
-        mpu.CalibrateAccel(6);
-        mpu.CalibrateGyro(6);
-        mpu.PrintActiveOffsets();
-        // turn on the DMP, now that it's ready
-        mpu.setDMPEnabled(true);
-
-        // enable Arduino interrupt detection
-        attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), dmpDataReady, RISING);
-        mpuIntStatus = mpu.getIntStatus();
-
-        dmpReady = true;
-
-        // get expected DMP packet size for later comparison
-        packetSize = mpu.dmpGetFIFOPacketSize();
-    }
-
+  // accel.x = accel.x - 0.35;
+  // accel.y = accel.y - -0.01;
+  // accel.z = accel.z - 1.14;
+  return accel;
 }
 
-MPU::Vector3 MPU::getDMPAngles(){
-  MPU::Vector3 angles;
-    
-  // if programming failed, don't try to do anything
-  if (!dmpReady) return angles;
-  // read a packet from FIFO
-  if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) { // Get the Latest packet 
-    // display Euler angles in degrees
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+void MPU::updateAccel(){
+  Wire.beginTransmission(this->MPU_ADDR); // begin writing to MPU
+  Wire.write(0x3B); // starting address ACCEL_X_H high byte register
+  Wire.endTransmission(false); // restart transmission for reading
 
-    // convert angles from radians to degrees
-    // sign convention (roll right (right wing down) = +, pitch forward (nose down) = +, yaw right (nose right) = +)
-    angles.x = ypr[2] * 180/M_PI; //  roll
-    angles.y = -ypr[1] * 180/M_PI; // pitch
-    angles.z = ypr[0] * 180/M_PI; // yaw
+  Wire.requestFrom(this->MPU_ADDR,6); // get 16 bytes for 3 axes in accel data sent as two 8 byte packets each
+  int16_t rawAx = (Wire.read() << 8) | Wire.read(); // accel x high byte logic OR with low byte to combine into 1 16 bit raw data value
+  int16_t rawAy = (Wire.read() << 8) | Wire.read(); // accel y 
+  int16_t rawAz = (Wire.read() << 8) | Wire.read(); // accel z
+
+
+  // convert raw data to proper units
+  accel.x = rawAx / this->ACCEL4G_SENSE;
+  accel.y = rawAy / this->ACCEL4G_SENSE;
+  accel.z = rawAz / this->ACCEL4G_SENSE;
+
+  // apply filtering to smooth accel noise
+  new_ax = alpha*accel.x + (1-alpha)*new_ax;
+  new_ay = alpha*accel.y + (1-alpha)*new_ay;
+  new_az = alpha*accel.z + (1-alpha)*new_az;
+
+  // update vector with filtered values, account for calibrated offsets
+  accel.x = new_ax - 0.35;
+  accel.y = new_ay - -0.01;
+  accel.z = new_az - 1.11;
+}
+
+MPU::Vector3 MPU::computeAngles(){
+  float startTime = micros();
+  float dt = (startTime - lastTime)/1000000.0f;
+
+  // safety clamping dt to avoid weird spikes
+  if(dt < 0.001f) dt = 0.001f;
+  if(dt > 0.02f) dt = 0.02f;
+  
+  // compute accel angle
+  float accel_roll_angle = atan2(accel.y, sqrt(accel.x*accel.x + accel.z*accel.z)) *57.2957; // deg
+  float accel_pitch_angle = atan2(-1*accel.x, sqrt(accel.y*accel.y + accel.z*accel.z)) * 57.2957; // deg 
+
+  // compute gyro angle
+  // initial angle should not be hard set to 0 (in case drone starts tilted), so setting to current accel initially will be good enough
+  if(firstRun){
+    prev_filtered_roll = accel_roll_angle;
+    prev_filtered_pitch = accel_pitch_angle;
+    firstRun = false;
   }
+  float gyro_roll_angle = prev_filtered_roll + gyro.x*dt;
+  float gyro_pitch_angle = prev_filtered_pitch + gyro.y*dt;
+
+  // combine through complimentary filter
+  float filtered_roll = alpha*gyro_roll_angle + (1-alpha)*accel_roll_angle;
+  float filtered_pitch = alpha*gyro_pitch_angle + (1-alpha)*accel_pitch_angle;
+
+  // update prev angles
+  prev_filtered_roll = filtered_roll;
+  prev_filtered_pitch = filtered_pitch;
+
+  // // Adjust for static mounting bias (degrees)
+  // const float pitchOffset = -9.3f; // measured bias (sign depends on direction)
+  // const float rollOffset = 0.1f;  // adjust if needed
+
+  // // Apply correction
+  // filtered_pitch -= pitchOffset;
+  // filtered_roll  -= rollOffset;
+
+  // add to angle vector
+  angles.x = filtered_roll;
+  angles.y = filtered_pitch;
+  
+  lastTime = startTime;
+  
   return angles;
+}
+
+void MPU::calibrate(uint16_t samples=12000){
+  Vector3 gyroSum;
+  Vector3 accelSum;
+
+  Serial.println("Starting IMU calibration. Keep device level and still... ");
+
+  for(uint16_t i = 0; i < samples; i++){
+    updateGyro();
+    updateAccel();
+
+    Vector3 g = getRawGyro();
+    Vector3 a = getRawAccel();
+
+    gyroSum.x += g.x;
+    gyroSum.y += g.y;
+    gyroSum.z += g.z;
+    accelSum.x += a.x;
+    accelSum.y += a.y;
+    accelSum.z += a.z;
+
+    delay(2); // 500hz sampling rate
+  }
+
+  // compute average offset
+  gyroOffset.x = gyroSum.x / samples;
+  gyroOffset.y = gyroSum.y / samples;
+  gyroOffset.z = gyroSum.z / samples;
+
+  accelOffset.x = accelSum.x / samples;
+  accelOffset.y = accelSum.y / samples;
+  accelOffset.z = (accelSum.z / samples) - 1.0f; // subtract gravity
+
+  Serial.println("Calibration complete. Offsets:");
+  Serial.print("Gyro offset: ");
+  Serial.print(gyroOffset.x); Serial.print(", ");
+  Serial.print(gyroOffset.y); Serial.print(", ");
+  Serial.println(gyroOffset.z);
+
+  Serial.print("Accel offset: ");
+  Serial.print(accelOffset.x); Serial.print(", ");
+  Serial.print(accelOffset.y); Serial.print(", ");
+  Serial.println(accelOffset.z);
+}
+
+MPU::Vector3 MPU::getRawGyro() const{
+  return gyro;
+}
+
+MPU::Vector3 MPU::getRawAccel() const{
+  return accel;
 }

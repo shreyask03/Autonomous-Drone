@@ -3,7 +3,6 @@ from tkinter import ttk
 from tcp_client import TCPClient
 import threading 
 import time
-
 firstTimeConnecting = True
 
 # create tcp server

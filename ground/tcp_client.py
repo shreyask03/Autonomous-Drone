@@ -3,7 +3,7 @@ import threading
 import queue
 
 class TCPClient:
-    def __init__(self, host='192.168.1.53', port=8000):
+    def __init__(self, host='192.168.1.62', port=8000):
         self.server_address = (host, port)
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket = None

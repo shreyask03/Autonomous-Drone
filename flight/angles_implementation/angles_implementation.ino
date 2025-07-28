@@ -9,17 +9,14 @@ const unsigned long ACRO_PERIOD = 4000; // microsecond value locks 250 hz loop r
 const unsigned long ANGLE_PERIOD = 10000; // microsecond value locks 100 hz loop rate (angle mode)
 
 // TEMPORARY: Testing angle calculation functionality | Delete and adjust dependent code when merged with main
-bool angleMode = false;
+bool angleMode = true;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  if(angleMode){
-    mpu.setupForDMP();
-  }
-  else{
-    mpu.init();
-  }
+  mpu.init();
+
+  // mpu.calibrate();
 }
 
 void loop() {
@@ -31,15 +28,18 @@ void loop() {
 
 
     /*sign convention (roll right (right wing down) = +, pitch forward (nose down) = +, yaw right (nose right) = +)*/
-    MPU::Vector3 angles = mpu.getDMPAngles();
+    mpu.updateGyro();
+    mpu.updateAccel();
+    MPU::Vector3 angles = mpu.computeAngles();
     float x = angles.x;
     float y = angles.y;
     float z = angles.z;
 
     /*COMMENT OUT: DEBUG USE ONLY | angle calculation debug print*/
-    // Serial.print("X ");Serial.print(x); Serial.print(" | ");
-    // Serial.print("Y ");Serial.print(y); Serial.print(" | ");
-    // Serial.print("Z ");Serial.println(z);
+    Serial.print("roll ");Serial.print(x); Serial.print(" | ");
+    Serial.print("pitch ");Serial.println(y); //Serial.print(" | ");
+    // Serial.print("yaw ");Serial.println(z);
+    // delay(30);
 
 
   }
@@ -54,9 +54,9 @@ void loop() {
     float yawrate = rates.z;
 
     /*COMMENT OUT: DEBUG USE ONLY | angular rate calculation debug print*/
-    // Serial.print("roll_rate = ");Serial.println(rollrate);
-    // Serial.print(" | pitch_rate = ");Serial.print(pitchrate);
-    // Serial.print(" | yaw_rate = ");Serial.println(yawrate);
+    Serial.print("roll_rate = ");Serial.print(rollrate);
+    Serial.print(" | pitch_rate = ");Serial.print(pitchrate);
+    Serial.print(" | yaw_rate = ");Serial.println(yawrate);
   }
 
 

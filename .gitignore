@@ -1,0 +1,16 @@
+# ROS 2 build and install files
+build/
+install/
+log/
+
+# Colcon build artifacts
+*.pyc
+*.swp
+
+# VSCode settings
+.vscode/
+
+# Python virtualenvs
+venv/
+.env/
+.venv/

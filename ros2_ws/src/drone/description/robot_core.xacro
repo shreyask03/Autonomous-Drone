@@ -1,0 +1,197 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+    <!--  COMMONLY USED COLORS -->
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+
+    <material name="orange">
+        <color rgba="1 0.3 0.1 1" />
+    </material>
+
+    <material name="black">
+        <color rgba="0 0 0 1" />
+    </material>
+
+    <material name="blue">
+        <color rgba="0.2 0.2 1 1" />
+    </material>
+
+
+    <!-- BASE LINK --> 
+    <link name="base_link">
+        <visual>
+
+            <geometry>
+                <box size="0.5 0.3 0.3"/>
+            </geometry>
+
+            <material name="white"/>
+
+            <origin xyz="0 0 0" rpy="0 0 0" /> <!-- At center of frame -->
+        </visual>
+        
+        
+
+    </link>
+
+    <!-- FRONT LEFT MOTOR ARM -->
+    <joint name="fl_motor_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="fl_motor"/>
+        <origin xyz="0.707 0.707 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="fl_motor">
+        <visual>
+            <geometry>
+                <cylinder length="1" radius="0.1"/>
+            </geometry>
+
+            <material name="orange"/>
+
+            <origin xyz="-0.3535 -0.3535 0" rpy= "0 1.57 0.785"/>
+        </visual>
+
+        
+    </link>
+
+    <!-- FRONT RIGHT MOTOR ARM -->
+    <joint name="fr_motor_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="fr_motor"/>
+        <origin xyz="0.707 -0.707 0" rpy="0 0 0" />
+    </joint>
+
+    <link name="fr_motor">
+        <visual>
+            <geometry>
+                <cylinder length="1" radius="0.1"/>
+            </geometry>
+
+            <material name="orange"/>
+
+            <origin xyz="-0.3535 0.3535 0" rpy= "0 1.57 -0.785"/>
+        </visual>
+    </link>
+
+    <!-- BACK LEFT MOTOR ARM -->
+    <joint name="bl_motor_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="bl_motor"/>
+        <origin xyz="-0.707 0.707 0" rpy="0 0 0" />
+    </joint>
+
+    <link name="bl_motor">
+        <visual>
+            <geometry>
+                <cylinder length="1" radius="0.1"/>
+            </geometry>
+
+            <material name="orange"/>
+
+            <origin xyz="0.3535 -0.3535 0" rpy= "0 1.57 -0.785"/>
+        </visual>
+    </link>
+
+    <!-- BACK RIGHT MOTOR ARM -->
+    <joint name="br_motor_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="br_motor"/>
+        <origin xyz="-0.707 -0.707 0" rpy="0 0 0" />
+    </joint>
+
+    <link name="br_motor">
+        <visual>
+            <geometry>
+                <cylinder length="1" radius="0.1"/>
+            </geometry>
+
+            <material name="orange"/>
+
+            <origin xyz="0.3535 0.3535 0" rpy= "0 1.57 0.785"/>
+        </visual>
+    </link>
+
+
+    <!-- FRONT LEFT PROPELLER -->
+    <joint name="fl_prop_joint" type="continuous">
+        <parent link="fl_motor"/>
+        <child link="fl_prop"/>
+        <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    </joint>
+
+    <link name="fl_prop">
+        <visual>
+            <geometry>
+                <cylinder length="0.004" radius="0.0635"/>
+            </geometry>
+
+            <material name="blue"/>
+            
+        </visual>
+
+    </link>
+
+    <!-- FRONT RIGHT PROPELLER -->
+     <joint name="fr_prop_joint" type="continuous">
+        <parent link="fr_motor"/>
+        <child link="fr_prop"/>
+        <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    </joint>
+
+    <link name="fr_prop">
+        <visual>
+            <geometry>
+                <cylinder length="0.004" radius="0.0635"/>
+            </geometry>
+
+            <material name="blue"/>
+
+            <origin xyz="0 0 0"/>
+        </visual>
+
+    </link>
+
+    <!-- BACK LEFT PROPELLER -->
+     <joint name="bl_prop_joint" type="continuous">
+        <parent link="bl_motor"/>
+        <child link="bl_prop"/>
+        <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    </joint>
+
+    <link name="bl_prop">
+        <visual>
+            <geometry>
+                <cylinder length="0.004" radius="0.0635"/>
+            </geometry>
+
+            <material name="blue"/>
+
+            <origin xyz="0 0 0"/>
+        </visual>
+
+    </link>
+
+    <!-- BACK RIGHT PROPELLER -->
+     <joint name="br_prop_joint" type="continuous">
+        <parent link="br_motor"/>
+        <child link="br_prop"/>
+        <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    </joint>
+
+    <link name="br_prop">
+        <visual>
+            <geometry>
+                <cylinder length="0.004" radius="0.0635"/>
+            </geometry>
+
+            <material name="blue"/>
+
+            <origin xyz="0 0 0"/>
+        </visual>
+
+    </link>
+</robot>

@@ -21,6 +21,10 @@
         <color rgba="0.2 0.2 1 1" />
     </material>
 
+    <material name="red">
+        <color rgba="1 0 0 1" />
+    </material>
+
 
     <!-- BASE LINK --> 
     <link name="base_link">
@@ -58,6 +62,12 @@
         <xacro:box mass="0.306" x="0.13" y="0.045" z="0.02" origin_xyz="0 0 -0.01" origin_rpy="0 0 0"/>
 
     </link>
+
+    <gazebo reference="frame_link">
+        <material>Gazebo/White</material>
+    </gazebo>
+
+
     <!-- FRONT LEFT MOTOR ARM -->
     <joint name="fl_motor_joint" type="fixed">
         <parent link="base_link"/>
@@ -88,6 +98,10 @@
         <xacro:cyl_end_x mass="0.016" r="0.004" l="0.1" origin_xyz="0.0211 0 0" origin_rpy="0 0 0"/>
         
     </link>
+
+    <gazebo reference="fl_motor">
+        <material>Gazebo/Orange</material>
+    </gazebo>
 
     <!-- FRONT RIGHT MOTOR ARM -->
     <joint name="fr_motor_joint" type="fixed">
@@ -120,6 +134,10 @@
 
     </link>
 
+    <gazebo reference="fr_motor">
+        <material>Gazebo/Orange</material>
+    </gazebo>
+
     <!-- BACK LEFT MOTOR ARM -->
     <joint name="bl_motor_joint" type="fixed">
         <parent link="base_link"/>
@@ -150,6 +168,10 @@
         <xacro:cyl_end_x mass="0.016" r="0.004" l="0.1" origin_xyz="0.0211 0 0" origin_rpy="0 0 0"/>
 
     </link>
+
+    <gazebo reference="bl_motor">
+        <material>Gazebo/Orange</material>
+    </gazebo>
 
     <!-- BACK RIGHT MOTOR ARM -->
     <joint name="br_motor_joint" type="fixed">
@@ -182,6 +204,9 @@
 
     </link>
 
+    <gazebo reference="br_motor">
+        <material>Gazebo/Orange</material>
+    </gazebo>
 
     <!-- FRONT LEFT PROPELLER -->
     <joint name="fl_prop_joint" type="continuous">
@@ -197,7 +222,7 @@
                 <cylinder length="0.004" radius="0.038"/>
             </geometry>
 
-            <material name="blue"/>
+            <material name="black"/>
             
             <origin xyz="0 0 0"/>
         </visual>
@@ -215,6 +240,10 @@
 
     </link>
 
+    <gazebo reference="fl_prop">
+        <material>Gazebo/Black</material>
+    </gazebo>
+
     <!-- FRONT RIGHT PROPELLER -->
      <joint name="fr_prop_joint" type="continuous">
         <parent link="fr_motor"/>
@@ -229,7 +258,7 @@
                 <cylinder length="0.004" radius="0.038"/>
             </geometry>
 
-            <material name="blue"/>
+            <material name="black"/>
 
             <origin xyz="0 0 0"/>
         </visual>
@@ -246,6 +275,10 @@
         <xacro:cyl_center_z mass="0.003" r="0.038" l="0.004"/>
 
     </link>
+
+    <gazebo reference="fr_prop">
+        <material>Gazebo/Black</material>
+    </gazebo>
 
     <!-- BACK LEFT PROPELLER -->
      <joint name="bl_prop_joint" type="continuous">
@@ -261,7 +294,7 @@
                 <cylinder length="0.004" radius="0.038"/>
             </geometry>
 
-            <material name="blue"/>
+            <material name="black"/>
 
             <origin xyz="0 0 0"/>
         </visual>
@@ -278,6 +311,10 @@
         <xacro:cyl_center_z mass="0.003" r="0.038" l="0.004"/>
 
     </link>
+
+    <gazebo reference="bl_prop">
+        <material>Gazebo/Black</material>
+    </gazebo>
 
     <!-- BACK RIGHT PROPELLER -->
      <joint name="br_prop_joint" type="continuous">
@@ -293,7 +330,7 @@
                 <cylinder length="0.004" radius="0.038"/>
             </geometry>
 
-            <material name="blue"/>
+            <material name="black"/>
 
             <origin xyz="0 0 0"/>
         </visual>
@@ -310,4 +347,9 @@
         <xacro:cyl_center_z mass="0.003" r="0.038" l="0.004"/>
 
     </link>
+
+    <gazebo reference="br_prop">
+        <material>Gazebo/Black</material>
+    </gazebo>
+
 </robot>

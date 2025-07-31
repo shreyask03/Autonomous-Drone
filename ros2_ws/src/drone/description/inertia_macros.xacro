@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- ################### Box Shape ################### -->
+    <xacro:macro name="box" params="mass x y z origin_xyz:='0 0 0' origin_rpy:='0 0 0' ">
+        
+        <inertial>
+            <mass value="${mass}"/>
+            <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+            <inertia 
+                ixx="${(1/12.0)*mass*(y**2 + z**2)}"
+                iyy="${(1/12.0)*mass*(x**2 + z**2)}"
+                izz="${(1/12.0)*mass*(x**2 + y**2)}"
+                ixy="0.0" ixz="0.0" iyz="0.0"
+            />
+        </inertial>
+    
+    </xacro:macro>
+
+    <!--###################CYLINDER SHAPE###################-->
+
+    <!-- ***** LENGTH CENTERED ABOUT X *****-->
+    
+    <!-- Formulas based on axes at one end -->
+    <xacro:macro name="cyl_end_x" params="mass r l origin_xyz:='0 0 0' origin_rpy:='0 0 0' ">
+
+        <inertial>
+            <mass value="${mass}"/>
+            <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+            <inertia
+                ixx="${(1/2)*mass*(r**2)}"
+                iyy="${(1/4)*mass*(r**2) + (1/3)*mass*(l**2)}"
+                izz="${(1/4)*mass*(r**2) + (1/3)*mass*(l**2)}"
+                ixy="0.0" ixz="0.0" iyz="0.0"
+            />
+        </inertial>
+
+    </xacro:macro>
+
+
+    <!-- Formulas based on axes at center -->
+    <xacro:macro name="cyl_center_x" params="mass r l origin_xyz:='0 0 0' origin_rpy:='0 0 0' ">
+        <inertial>
+            <mass value="${mass}"/>
+            <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+            <inertia
+                ixx="${(1/2)*mass*(r**2)}"
+                iyy="${(1/4)*mass*(r**2) + (1/12)*mass*(l**2)}"
+                izz="${(1/4)*mass*(r**2) + (1/12)*mass*(l**2)}"
+                ixy="0.0" ixz="0.0" iyz="0.0"
+            />
+        </inertial>
+    </xacro:macro>
+
+
+
+    <!-- ***** LENGTH CENTERED ABOUT Z ***** -->
+
+    <!-- Formulas based on axes at one end -->
+    <xacro:macro name="cyl_end_z" params="mass r l origin_xyz:='0 0 0' origin_rpy:='0 0 0' ">
+
+        <inertial>
+            <mass value="${mass}"/>
+            <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+            <inertia
+                ixx="${(1/4)*mass*(r**2) + (1/3)*mass*(l**2)}"
+                iyy="${(1/4)*mass*(r**2) + (1/3)*mass*(l**2)}"
+                izz="${(1/2)*mass*(r**2)}" 
+                ixy="0.0" ixz="0.0" iyz="0.0"
+            />
+        </inertial>
+
+    </xacro:macro>
+
+    <!-- Formulas based on axes at center -->
+    <xacro:macro name="cyl_center_z" params="mass r l origin_xyz:='0 0 0' origin_rpy:='0 0 0' ">
+        <inertial>
+            <mass value="${mass}"/>
+            <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+            <inertia
+                ixx="${(1/4)*mass*(r**2) + (1/12)*mass*(l**2)}"
+                iyy="${(1/4)*mass*(r**2) + (1/12)*mass*(l**2)}"
+                izz="${(1/2)*mass*(r**2)}" 
+                ixy="0.0" ixz="0.0" iyz="0.0"
+            />
+        </inertial>
+    </xacro:macro>
+
+
+
+
+    <!-- ################### Sphere Shape ################### -->
+    <xacro:macro name="solid_sphere" params="mass r origin_xyz:='0 0 0' origin_rpy:='0 0 0' ">
+        <inertial>
+            <mass value="${mass}"/>
+            <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+            <inertia
+                ixx="${(2/5)*mass*(r**2)}"
+                iyy="${(2/5)*mass*(r**2)}"
+                izz="${(2/5)*mass*(r**2)}"
+                ixy="0.0" ixz="0.0" iyz="0.0"
+            />
+        </inertial>
+    </xacro:macro>
+
+    <!-- ################### Thin Rod Shape ################### -->
+
+    <!-- ***** LENGTH CENTERED ABOUT X *****-->
+
+    <!-- Formulas based on axes at center -->
+    <xacro:macro name="thin_rod_center_x" params="mass r l origin_xyz:='0 0 0' origin_rpy:='0 0 0' ">
+        <inertial>
+            <mass value="${mass}"/>
+            <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+            <inertia
+                ixx="${(1/2)*mass*(r**2)}"
+                iyy="${(1/12)*mass*(l**2)}"
+                izz="${(1/12)*mass*(l**2)}"
+                ixy="0.0" ixz="0.0" iyz="0.0"
+            />
+        </inertial>
+    </xacro:macro>
+
+    <!-- Thin Rod Shape -->
+    <!-- Formulas based on axes at end -->
+    <xacro:macro name="thin_rod_end_x" params="mass r l origin_xyz:='0 0 0' origin_rpy:='0 0 0' ">
+        <inertial>
+            <mass value="${mass}"/>
+            <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+            <inertia
+                ixx="${(1/2)*mass*(r**2)}"
+                iyy="${(1/3)*mass*(l**2)}"
+                izz="${(1/3)*mass*(l**2)}"
+                ixy="0.0" ixz="0.0" iyz="0.0"
+            />
+        </inertial>
+    </xacro:macro>
+
+
+    <!-- ***** LENGTH CENTERED ABOUT Z *****-->
+
+    <!-- Formulas based on axes at center -->
+    <xacro:macro name="thin_rod_center_z" params="mass r l origin_xyz:='0 0 0' origin_rpy:='0 0 0' ">
+        <inertial>
+            <mass value="${mass}"/>
+            <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+            <inertia
+                ixx="${(1/12)*mass*(l**2)}"
+                iyy="${(1/12)*mass*(l**2)}"
+                izz="${(1/2)*mass*(r**2)}"
+                ixy="0.0" ixz="0.0" iyz="0.0"
+            />
+        </inertial>
+    </xacro:macro>
+
+    <!-- Thin Rod Shape -->
+    <!-- Formulas based on axes at end -->
+    <xacro:macro name="thin_rod_end_z" params="mass r l origin_xyz:='0 0 0' origin_rpy:='0 0 0' ">
+        <inertial>
+            <mass value="${mass}"/>
+            <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+            <inertia
+                ixx="${(1/3)*mass*(l**2)}"
+                iyy="${(1/3)*mass*(l**2)}"
+                izz="${(1/2)*mass*(r**2)}"
+                ixy="0.0" ixz="0.0" iyz="0.0"
+            />
+        </inertial>
+    </xacro:macro>
+
+
+</robot>
